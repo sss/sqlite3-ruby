@@ -7,6 +7,15 @@ module SQLite3
       @db = SQLite3::Database.new(':memory:')
     end
 
+    def test_backup
+      @db.execute('create table foo(a integer)')
+      @db.execute('insert into foo(a) values (1)')
+
+      db = SQLite3::Database.new(':memory:')
+      @db.copy_to(db)
+      assert_equal([[1]], db.execute('select * from foo'))
+    end
+
     def test_new
       db = SQLite3::Database.new(':memory:')
       assert db

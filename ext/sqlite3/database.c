@@ -77,7 +77,7 @@ static VALUE initialize(int argc, VALUE *argv, VALUE self)
   }
 #endif
 
-  CHECK(ctx->db, status)
+  CHECK(ctx->db, status);
 
   rb_iv_set(self, "@tracefunc", Qnil);
   rb_iv_set(self, "@authorizer", Qnil);
@@ -536,6 +536,32 @@ static VALUE set_busy_timeout(VALUE self, VALUE timeout)
   return self;
 }
 
+/* call-seq: db.copy_to(target)
+ *
+ * Copy database to +target+
+ */
+static VALUE copy_to(VALUE self, VALUE _target)
+{
+  sqlite3RubyPtr ctx;
+  sqlite3RubyPtr target;
+
+  Data_Get_Struct(self, sqlite3Ruby, ctx);
+  Data_Get_Struct(_target, sqlite3Ruby, target);
+
+  REQUIRE_OPEN_DB(ctx);
+  REQUIRE_OPEN_DB(target);
+
+  sqlite3_backup * b = sqlite3_backup_init(target->db, "main", ctx->db, "main");
+
+  if(b) {
+    sqlite3_backup_step(b, -1);
+    sqlite3_backup_finish(b);
+  }
+  CHECK(target->db, sqlite3_errcode(target->db));
+
+  return self;
+}
+
 #ifdef HAVE_RUBY_ENCODING_H
 static int enc_cb(void * _self, int columns, char **data, char **names)
 {
@@ -589,6 +615,7 @@ void init_sqlite3_database()
   rb_define_method(cSqlite3Database, "authorizer=", set_authorizer, 1);
   rb_define_method(cSqlite3Database, "busy_handler", busy_handler, -1);
   rb_define_method(cSqlite3Database, "busy_timeout=", set_busy_timeout, 1);
+  rb_define_method(cSqlite3Database, "copy_to", copy_to, 1);
 
 #ifdef HAVE_RUBY_ENCODING_H
   rb_define_method(cSqlite3Database, "encoding", db_encoding, 0);
