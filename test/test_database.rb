@@ -1,10 +1,37 @@
 require 'helper'
-require 'iconv'
 
 module SQLite3
   class TestDatabase < Test::Unit::TestCase
     def setup
       @db = SQLite3::Database.new(':memory:')
+    end
+
+    def test_blob
+      @db.execute("CREATE TABLE blobs ( id INTEGER, hash BLOB(10) )")
+      str = "\0foo"
+      @db.execute("INSERT INTO blobs VALUES (0, ?)", [str])
+      assert_equal [[0, str]], @db.execute("SELECT * FROM blobs")
+    end
+
+    def test_get_first_row
+      assert_equal [1], @db.get_first_row('SELECT 1')
+    end
+
+    def test_get_first_row_with_type_translation_and_hash_results
+      @db.results_as_hash = true
+      assert_equal({0=>1, "1"=>1}, @db.get_first_row('SELECT 1'))
+    end
+
+    def test_execute_with_type_translation_and_hash
+      @db.results_as_hash = true
+      rows = []
+      @db.execute('SELECT 1') { |row| rows << row }
+
+      assert_equal({0=>1, "1"=>1}, rows.first)
+    end
+
+    def test_encoding
+      assert @db.encoding, 'database has encoding'
     end
 
     def test_changes
@@ -270,7 +297,7 @@ module SQLite3
     end
 
     def test_close_with_open_statements
-      stmt = @db.prepare("select 'foo'")
+      @db.prepare("select 'foo'")
       assert_raises(SQLite3::BusyException) do
         @db.close
       end

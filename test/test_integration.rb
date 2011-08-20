@@ -16,7 +16,6 @@ class TC_Database_Integration < Test::Unit::TestCase
   end
 
   def test_table_info_with_type_translation_active
-    @db.type_translation = true
     assert_nothing_raised { @db.table_info("foo") }
   end
 
@@ -261,7 +260,7 @@ class TC_Database_Integration < Test::Unit::TestCase
   end
 
   def test_execute_batch_with_bind
-    @db.execute_batch( <<-SQL, 1 )
+    @db.execute_batch( <<-SQL, [1] )
       create table bar ( a, b, c );
       insert into bar values ( 'one', 2, ? );
       insert into bar values ( 'four', 5, ? );

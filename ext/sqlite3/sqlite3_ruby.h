@@ -39,6 +39,7 @@ extern VALUE cSqlite3Blob;
 #include <database.h>
 #include <statement.h>
 #include <exception.h>
+#include <backup.h>
 #include <vfs.h>
 
 #endif
