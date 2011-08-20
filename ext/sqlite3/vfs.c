@@ -126,7 +126,8 @@ static int rbFile_check_reserved_lock(sqlite3_file * ctx, int *pResOut)
 
 static int rbFile_file_control(sqlite3_file * ctx, int op, void *pArg)
 {
-  rb_raise(rb_eRuntimeError, "file control is unsupported");
+  /* rb_raise(rb_eRuntimeError, "file control is unsupported"); */
+  return SQLITE_NOTFOUND;
 }
 
 static int rbFile_sector_size(sqlite3_file * ctx)
