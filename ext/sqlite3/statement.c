@@ -49,7 +49,11 @@ static VALUE initialize(VALUE self, VALUE db, VALUE sql)
   }
 #endif
 
+#ifdef HAVE_SQLITE3_PREPARE_V2
   status = sqlite3_prepare_v2(
+#else
+  status = sqlite3_prepare(
+#endif
       db_ctx->db,
       (const char *)StringValuePtr(sql),
       (int)RSTRING_LEN(sql),
@@ -255,12 +259,10 @@ static VALUE bind_param(VALUE self, VALUE key, VALUE value)
       }
       break;
     case T_BIGNUM:
-#if SIZEOF_LONG < 8
       if (RBIGNUM_LEN(value) * SIZEOF_BDIGITS <= 8) {
           status = sqlite3_bind_int64(ctx->st, index, (sqlite3_int64)NUM2LL(value));
           break;
       }
-#endif
     case T_FLOAT:
       status = sqlite3_bind_double(ctx->st, index, NUM2DBL(value));
       break;
@@ -295,7 +297,26 @@ static VALUE reset_bang(VALUE self)
   REQUIRE_OPEN_STMT(ctx);
 
   status = sqlite3_reset(ctx->st);
-  CHECK(sqlite3_db_handle(ctx->st), status);
+
+  ctx->done_p = 0;
+
+  return self;
+}
+
+/* call-seq: stmt.clear_bindings!
+ *
+ * Resets the statement. This is typically done internally, though it might
+ * occassionally be necessary to manually reset the statement.
+ */
+static VALUE clear_bindings(VALUE self)
+{
+  sqlite3StmtRubyPtr ctx;
+  int status;
+
+  Data_Get_Struct(self, sqlite3StmtRuby, ctx);
+  REQUIRE_OPEN_STMT(ctx);
+
+  status = sqlite3_clear_bindings(ctx->st);
 
   ctx->done_p = 0;
 
@@ -405,6 +426,7 @@ void init_sqlite3_statement()
   rb_define_method(cSqlite3Statement, "closed?", closed_p, 0);
   rb_define_method(cSqlite3Statement, "bind_param", bind_param, 2);
   rb_define_method(cSqlite3Statement, "reset!", reset_bang, 0);
+  rb_define_method(cSqlite3Statement, "clear_bindings!", clear_bindings, 0);
   rb_define_method(cSqlite3Statement, "step", step, 0);
   rb_define_method(cSqlite3Statement, "done?", done_p, 0);
   rb_define_method(cSqlite3Statement, "column_count", column_count, 0);

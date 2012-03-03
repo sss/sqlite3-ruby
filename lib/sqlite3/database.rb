@@ -236,7 +236,7 @@ Support for this behavior will be removed in version 2.0.0.
     # This is a convenience method for creating a statement, binding
     # paramters to it, and calling execute:
     #
-    #   result = db.query( "select * from foo where a=?", 5 )
+    #   result = db.query( "select * from foo where a=?", [5])
     #   # is the same as
     #   result = db.prepare( "select * from foo where a=?" ).execute( 5 )
     #
@@ -250,7 +250,7 @@ Support for this behavior will be removed in version 2.0.0.
         if args.empty?
           bind_vars = []
         else
-          bind_vars = [nil] + args
+          bind_vars = [bind_vars] + args
         end
 
         warn(<<-eowarn) if $VERBOSE
@@ -482,7 +482,6 @@ Support for this will be removed in version 2.0.0.
     # #rollback.
     def transaction( mode = :deferred )
       execute "begin #{mode.to_s} transaction"
-      @transaction_active = true
 
       if block_given?
         abort = false
@@ -505,7 +504,6 @@ Support for this will be removed in version 2.0.0.
     # <tt>abort? and rollback or commit</tt>.
     def commit
       execute "commit transaction"
-      @transaction_active = false
       true
     end
 
@@ -515,13 +513,7 @@ Support for this will be removed in version 2.0.0.
     # <tt>abort? and rollback or commit</tt>.
     def rollback
       execute "rollback transaction"
-      @transaction_active = false
       true
-    end
-
-    # Returns +true+ if there is a transaction active, and +false+ otherwise.
-    def transaction_active?
-      @transaction_active
     end
 
     # Returns +true+ if the database has been open in readonly mode
