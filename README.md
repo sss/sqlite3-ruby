@@ -13,3 +13,6 @@ About this repository
   `tenderlove/*`: (branches, tags)
     From git://github.com/tenderlove/sqlite3-ruby.git
 
+  `vfs`: (branch)
+    Based on `tenderlove/vfs`, implements VFS in Ruby.
+
