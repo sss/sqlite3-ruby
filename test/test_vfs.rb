@@ -13,27 +13,32 @@ module SQLite3
     end
 
     def test_my_vfs
-      db = SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS')
+      SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS') do |db|
+        # no-op
+      end
     end
 
     def test_my_vfs_create_table
-      db = SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS')
-      db.execute('create table ex(id int, data string)')
+      SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS') do |db|
+        db.execute('create table ex(id int, data string)')
+      end
     end
 
     def test_read_write
-      db = SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS')
-      db.execute('create table ex(id int, data string)')
-      db.execute('insert into ex(id, data) VALUES (1, "foo")')
-      assert_equal([[1, "foo"]], db.execute('select id, data from ex'))
+      SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS') do |db|
+        db.execute('create table ex(id int, data string)')
+        db.execute('insert into ex(id, data) VALUES (1, "foo")')
+        assert_equal([[1, "foo"]], db.execute('select id, data from ex'))
+      end
     end
 
     def test_truncate
-      db = SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS')
-      db.execute('PRAGMA auto_vacuum = 1')
-      db.execute('create table ex(id int, data string)')
-      db.execute('insert into ex(id, data) VALUES (1, "foo")')
-      db.execute('drop table ex')
+      SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS') do |db|
+        db.execute('PRAGMA auto_vacuum = 1')
+        db.execute('create table ex(id int, data string)')
+        db.execute('insert into ex(id, data) VALUES (1, "foo")')
+        db.execute('drop table ex')
+      end
     end
 
     def test_check_reserved_lock
