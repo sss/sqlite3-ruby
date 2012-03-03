@@ -8,7 +8,9 @@ module SQLite3
       end
     end
 
-    SQLite3.vfs_register(MyVFS.new)
+    def setup
+      SQLite3.vfs_register(MyVFS.new)
+    end
 
     def test_my_vfs
       db = SQLite3::Database.new('foo', nil, 'SQLite3::TestVFS::MyVFS')
